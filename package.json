@@ -3,10 +3,15 @@
 	"version": "0.0.1",
 	"description": "guetzli binary wrapper",
 	"keywords": [
-		"jpg",
-		"jpeg",
+		"guetzli",
 		"image-compression",
-		"guetzli"
+		"image",
+		"img",
+		"jpeg",
+		"jpg",
+		"optimize",
+		"compress",
+		"minify"
 	],
 	"license": "Apache-2.0",
 	"author": "Andrey Warkentin (https://github.com/343dev)",
