@@ -18,6 +18,9 @@
 	"engines": {
 		"node": ">=18.17"
 	},
+	"scripts": {
+		"lint": "npx eslint ./"
+	},
 	"devDependencies": {
 		"@343dev/eslint-config": "^1.0.0",
 		"eslint": "^8.57.0"
