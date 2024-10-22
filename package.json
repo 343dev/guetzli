@@ -1,0 +1,21 @@
+{
+	"name": "@343dev/guetzli",
+	"version": "0.0.1",
+	"description": "guetzli binary wrapper",
+	"keywords": [
+		"jpg",
+		"jpeg",
+		"image-compression",
+		"guetzli"
+	],
+	"license": "Apache-2.0",
+	"author": "Andrey Warkentin (https://github.com/343dev)",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/343dev/guetzli"
+	},
+	"type": "module",
+	"engines": {
+		"node": ">=18.17"
+	}
+}
