@@ -19,8 +19,10 @@
 		"node": ">=18.17"
 	},
 	"files": [
+		"vendor/",
 		"cli.js",
-		"index.js"
+		"index.js",
+		"postinstall.js"
 	],
 	"bin": {
 		"guetzli": "./cli.js"
@@ -28,6 +30,7 @@
 	"exports": "./index.js",
 	"scripts": {
 		"lint": "npx eslint ./",
+		"postinstall": "./postinstall.js",
 		"update-git-hooks": "npx simple-git-hooks"
 	},
 	"devDependencies": {
