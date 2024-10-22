@@ -1,0 +1,58 @@
+{
+	"name": "@343dev/guetzli",
+	"version": "1.0.0",
+	"description": "guetzli binary wrapper",
+	"keywords": [
+		"guetzli",
+		"image-compression",
+		"image",
+		"img",
+		"jpeg",
+		"jpg",
+		"optimize",
+		"compress",
+		"minify"
+	],
+	"license": "Apache-2.0",
+	"author": "Andrey Warkentin (https://github.com/343dev)",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/343dev/guetzli"
+	},
+	"type": "module",
+	"engines": {
+		"node": ">=18.17"
+	},
+	"files": [
+		"vendor/",
+		"cli.js",
+		"index.js",
+		"postinstall.js"
+	],
+	"bin": {
+		"guetzli": "./cli.js"
+	},
+	"exports": "./index.js",
+	"scripts": {
+		"lint": "npx eslint ./",
+		"postinstall": "./postinstall.js",
+		"update-git-hooks": "npx simple-git-hooks"
+	},
+	"devDependencies": {
+		"@343dev/eslint-config": "^1.0.0",
+		"eslint": "^8.57.0",
+		"lint-staged": "^15.2.10",
+		"simple-git-hooks": "^2.11.1"
+	},
+	"eslintConfig": {
+		"extends": "@343dev"
+	},
+	"lint-staged": {
+		"*.js": [
+			"eslint --fix"
+		]
+	},
+	"simple-git-hooks": {
+		"pre-commit": "npx lint-staged"
+	}
+}
