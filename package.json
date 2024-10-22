@@ -35,7 +35,7 @@
 	"exports": "./index.js",
 	"scripts": {
 		"lint": "npx eslint ./",
-		"postinstall": "./postinstall.js",
+		"postinstall": "node postinstall.js",
 		"update-git-hooks": "npx simple-git-hooks"
 	},
 	"devDependencies": {
