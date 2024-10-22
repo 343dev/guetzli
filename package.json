@@ -19,8 +19,12 @@
 		"node": ">=18.17"
 	},
 	"files": [
+		"cli.js",
 		"index.js"
 	],
+	"bin": {
+		"guetzli": "./cli.js"
+	},
 	"exports": "./index.js",
 	"scripts": {
 		"lint": "npx eslint ./",
