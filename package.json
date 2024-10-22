@@ -18,6 +18,10 @@
 	"engines": {
 		"node": ">=18.17"
 	},
+	"files": [
+		"index.js"
+	],
+	"exports": "./index.js",
 	"scripts": {
 		"lint": "npx eslint ./",
 		"update-git-hooks": "npx simple-git-hooks"
