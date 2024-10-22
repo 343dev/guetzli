@@ -19,7 +19,8 @@
 		"node": ">=18.17"
 	},
 	"scripts": {
-		"lint": "npx eslint ./"
+		"lint": "npx eslint ./",
+		"update-git-hooks": "npx simple-git-hooks"
 	},
 	"devDependencies": {
 		"@343dev/eslint-config": "^1.0.0",
