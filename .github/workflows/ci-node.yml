@@ -12,7 +12,13 @@ jobs:
     strategy:
       matrix:
         node-version: [18.20.8, 20.19.0, latest]
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [
+            ubuntu-latest, # x64
+            ubuntu-24.04-arm, # arm64
+            macos-13, # x64
+            macos-latest, # arm64
+            windows-latest, # x64
+          ]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
