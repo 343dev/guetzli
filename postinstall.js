@@ -1,22 +1,21 @@
 #!/usr/bin/env node
 
 import fs from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { arch, platform } from 'node:process';
 
-const BINARY_NAME = {
-	darwin: 'guetzli_darwin_x86-64',
-	linux: 'guetzli_linux_x86-64',
-	win32: 'guetzli_windows_x86-64.exe',
+import guetzli from './index.js';
+
+const supported = {
+	arch: ['arm64', 'x64'],
+	platform: ['darwin', 'linux', 'win32'],
 };
 
-const binaryName = BINARY_NAME[process.platform];
-
-if (!binaryName) {
-	throw new Error(`Platform "${process.platform}" is not supported`);
+if (!supported.arch.includes(arch)) {
+	throw new Error(`"${arch}" CPU architecture is not supported`);
 }
 
-const filename = fileURLToPath(import.meta.url);
-const dirname = path.dirname(filename);
+if (!supported.platform.includes(platform)) {
+	throw new Error(`"${platform}" OS platform is not supported`);
+}
 
-await fs.promises.access(path.join(dirname, 'vendor', binaryName));
+await fs.promises.access(guetzli);
