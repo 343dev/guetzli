@@ -50,3 +50,17 @@ Guetzli assumes that input is in **sRGB profile** with a **gamma of 2.2**. Guetz
 Guetzli is designed to work on high quality images. You should always prefer providing uncompressed input images (e.g. that haven't been already compressed with any JPEG encoders, including Guetzli). While it will work on other images too, results will be poorer. You can try compressing an enclosed sample high quality image.
 
 JPEG images do not support alpha channel (transparency). If the input is a PNG with an alpha channel, it will be overlaid on black background before encoding.
+
+## Troubleshooting
+
+### Alpine Linux compatibility
+
+If you see a 'not found' error when running the bundled binaries on Alpine Linux, this is due to Alpine’s use of musl libc (not glibc), which is incompatible with these prebuilt binaries.
+
+Install the `gcompat` compatibility package:
+
+```sh
+apk add gcompat
+```
+
+After installing, the bundled binaries should run as expected.
