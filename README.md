@@ -51,16 +51,3 @@ Guetzli is designed to work on high quality images. You should always prefer pro
 
 JPEG images do not support alpha channel (transparency). If the input is a PNG with an alpha channel, it will be overlaid on black background before encoding.
 
-## Troubleshooting
-
-### Alpine Linux compatibility
-
-If you see a 'not found' error when running the bundled binaries on Alpine Linux, this is due to Alpine’s use of musl libc (not glibc), which is incompatible with these prebuilt binaries.
-
-Install the `gcompat` compatibility package:
-
-```sh
-apk add gcompat
-```
-
-After installing, the bundled binaries should run as expected.
