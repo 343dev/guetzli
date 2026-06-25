@@ -4,6 +4,7 @@
      alt="Guetzli avatar: A graphic representation of a round biscuit with a scalloped edge, yellow in color, and topped with three evenly spaced red circles."
      src="./logo.svg">
 
+[![NPM Downloads](https://img.shields.io/npm/dw/%40343dev%2Fguetzli)](https://www.npmjs.com/package/@343dev/guetzli)
 [![npm](https://img.shields.io/npm/v/@343dev/guetzli.svg)](https://www.npmjs.com/package/@343dev/guetzli)
 
 [google/guetzli](https://github.com/google/guetzli) binary wrapper for Node.js
@@ -50,4 +51,12 @@ Guetzli assumes that input is in **sRGB profile** with a **gamma of 2.2**. Guetz
 Guetzli is designed to work on high quality images. You should always prefer providing uncompressed input images (e.g. that haven't been already compressed with any JPEG encoders, including Guetzli). While it will work on other images too, results will be poorer. You can try compressing an enclosed sample high quality image.
 
 JPEG images do not support alpha channel (transparency). If the input is a PNG with an alpha channel, it will be overlaid on black background before encoding.
+
+## Other projects
+
+- 🖼 [optimizt](https://github.com/343dev/optimizt) — CLI tool for image optimization: compresses PNG, JPEG, GIF, SVG, and creates AVIF/WebP
+- 📦 [harold](https://github.com/343dev/harold) — CLI tool that compares frontend project bundle sizes between snapshots
+- 🐳 [jailbot](https://github.com/343dev/jailbot) — Docker container wrapper with automatic filesystem path mounting
+- 📝 [markdown-lint](https://github.com/343dev/markdown-lint) — Markdown code style linter based on Prettier, Remark, and Typograf
+- 🔤 [languagetool-node](https://github.com/343dev/languagetool-node) — CLI spell and grammar checker powered by LanguageTool
 
