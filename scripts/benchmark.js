@@ -12,6 +12,15 @@ function usage() {
 	return 'Usage: node scripts/benchmark.js <1mp.jpg> <4mp.jpg> [8mp.jpg]\n';
 }
 
+function enforceThresholds(results) {
+	const failed = results.filter(result => result.wasmToNativeRatio > 2);
+	if (failed.length > 0) {
+		throw new Error(
+			`WebAssembly/native duration exceeds 2x for ${failed.map(result => result.fixture).join(', ')}`,
+		);
+	}
+}
+
 async function medianOperation(operation) {
 	await operation();
 	const measurements = [];
@@ -95,4 +104,5 @@ if (process.argv.length < 4 || process.argv.length > 5) {
 		quality: qualities.quality,
 		results,
 	}, undefined, '\t')}\n`);
+	enforceThresholds(results);
 }
