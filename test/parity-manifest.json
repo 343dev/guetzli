@@ -48,7 +48,7 @@
 		"floating-point-boundary-444.jpg": {
 			"84": { "size": 1261, "sha256": "8851f5bc7796afb2972095e977184c7653ccb1da9086607013f4eae526f1254f", "parity": "byte" },
 			"90": { "size": 1591, "sha256": "72a97ee0b32fcc16c5ddb98796052179af5274b2f07137b4f42e28196ddb052f", "parity": "byte" },
-			"95": { "size": 2507, "sha256": "95b3e5d13041b407c9345ed31fed046719c8dcded3ea74e4357b6a0d6025ade1", "parity": "equivalent" },
+			"95": { "size": 2507, "sha256": "95b3e5d13041b407c9345ed31fed046719c8dcded3ea74e4357b6a0d6025ade1", "parity": "equivalent", "inputSha256": "5a9d67c90a42940b4159e4c99423436af00c4bcb43d03fae09071b31561dba25", "wasmSize": 2505, "wasmSha256": "d785856312e9f92bdc89c85b58c2951fd45ceb6a778ef8b90c62c38dcc211bad" },
 			"100": { "size": 4399, "sha256": "3eac122dd155aea5df19433443231ad1be037960aba63fa7a28d5840496511a8", "parity": "byte" },
 			"110": { "size": 4399, "sha256": "3eac122dd155aea5df19433443231ad1be037960aba63fa7a28d5840496511a8", "parity": "byte" }
 		}
