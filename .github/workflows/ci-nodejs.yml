@@ -69,7 +69,12 @@ jobs:
       - name: Verify committed distribution
         run: npm run verify:dist
       - name: Build native reference
-        run: npm run build:native
+        run: |
+          docker run --rm --platform linux/amd64 \
+            --volume "$PWD:/workspace" \
+            --workdir /workspace \
+            gcc:14.2.0 \
+            ./scripts/build-native.sh
       - name: Run parity tests
         run: node --test --test-concurrency=1 test/parity.test.js
       - name: Pack release artifact
