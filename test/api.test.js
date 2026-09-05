@@ -13,6 +13,18 @@ function sha256(value) {
 	return createHash('sha256').update(value).digest('hex');
 }
 
+function withDimensions(input, width, height) {
+	const copy = Buffer.from(input);
+	for (let index = 0; index < copy.length - 9; index += 1) {
+		if (copy[index] === 0xFF && [0xC0, 0xC1, 0xC2].includes(copy[index + 1])) {
+			copy.writeUInt16BE(height, index + 5);
+			copy.writeUInt16BE(width, index + 7);
+			return copy;
+		}
+	}
+	throw new Error('Fixture has no JPEG start-of-frame marker');
+}
+
 async function expectCode(promise, code) {
 	await assert.rejects(promise, (error) => {
 		assert.equal(error.code, code);
@@ -65,6 +77,18 @@ test('validates input and options with stable error codes', async () => {
 test('classifies malformed and unsupported JPEG input', async () => {
 	await expectCode(encode(await readFile(invalidUrl)), errorCodes.INVALID_INPUT);
 	await expectCode(encode(await readFile(grayscaleUrl)), errorCodes.INVALID_INPUT);
+});
+
+test('rejects images that exceed either memory estimate', async () => {
+	const fixture = await readFile(fixtureUrl);
+	await expectCode(
+		encode(withDimensions(fixture, 2000, 2000), { memlimit: 100 }),
+		errorCodes.MEMORY_LIMIT,
+	);
+	await expectCode(
+		encode(withDimensions(fixture, 4000, 3000)),
+		errorCodes.MEMORY_LIMIT,
+	);
 });
 
 test('supports two concurrent encoding operations', async () => {

@@ -47,6 +47,7 @@
 		"setup-emsdk": "./scripts/setup-emsdk.sh",
 		"build:wasm": "./scripts/build-wasm.sh",
 		"build:native": "./scripts/build-native.sh",
+		"benchmark": "node ./scripts/benchmark.js",
 		"lint": "npx eslint ./",
 		"test": "node --test --test-concurrency=1",
 		"test:types": "tsc --noEmit",
