@@ -30,6 +30,7 @@
 		"index.js",
 		"index.d.ts",
 		"logo.svg",
+		"MIGRATION.md",
 		"UPSTREAM.md",
 		"THIRD_PARTY_NOTICES.md"
 	],
