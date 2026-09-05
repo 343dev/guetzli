@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - Unreleased
+
+### Added
+
+- Added an asynchronous ESM API with TypeScript declarations, stable error codes, and a fresh Worker Thread for each encoding operation.
+- Added a portable WebAssembly distribution compiled from Google Guetzli v1.0.1.
+- Added standard-stream support, atomic file output, strict option parsing, and documented exit statuses to the CLI.
+- Added pinned upstream provenance, reproducible build tooling, native/WebAssembly parity tests, and installed-tarball tests.
+
+### Changed
+
+- Raised the minimum Node.js version to 22.22.1.
+- Replaced all platform-specific native executables with one committed wasm32 distribution.
+- Changed the CLI memory-limit default to 3500 MiB and made the limit mandatory.
+
+### Removed
+
+- Removed PNG input support and the `--nomemlimit` option.
+- Removed CommonJS and package subpath entry points.
+
 ## [1.3.0] - 2026-06-25
 
 ### Changed
