@@ -3,6 +3,7 @@ import { mkdtemp, readFile, rm, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
+import { fileURLToPath } from 'node:url';
 
 import encode from '../index.js';
 
@@ -54,10 +55,10 @@ async function nativeEncode(binary, inputPath, outputPath) {
 }
 
 async function measure(inputPath) {
-	const defaultBinary = new URL(
+	const defaultBinary = fileURLToPath(new URL(
 		'../.cache/native-reference/guetzli-native-reference',
 		import.meta.url,
-	).pathname;
+	));
 	const binary = process.env.GUETZLI_NATIVE_REFERENCE ?? defaultBinary;
 	const directory = await mkdtemp(path.join(tmpdir(), 'guetzli-benchmark-'));
 	const nativeOutput = path.join(directory, 'native.jpg');

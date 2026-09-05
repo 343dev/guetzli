@@ -5,9 +5,11 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
 import test from 'node:test';
+import { fileURLToPath } from 'node:url';
 
 const execFileAsync = promisify(execFile);
 const root = new URL('../', import.meta.url);
+const rootPath = fileURLToPath(root);
 
 async function command(file, arguments_, options = {}) {
 	return execFileAsync(file, arguments_, {
@@ -24,7 +26,7 @@ async function command(file, arguments_, options = {}) {
 test('the npm tarball installs and runs without build lifecycle hooks', { timeout: 120_000 }, async () => {
 	const staging = await mkdtemp(path.join(tmpdir(), 'guetzli-pack-'));
 	const installation = path.join(staging, 'installation');
-	const { stdout } = await command('npm', ['pack', root.pathname, '--json', '--pack-destination', staging]);
+	const { stdout } = await command('npm', ['pack', rootPath, '--json', '--pack-destination', staging]);
 	const packed = JSON.parse(stdout);
 	const [{ filename, files }] = Array.isArray(packed)
 		? packed
@@ -65,10 +67,11 @@ test('the npm tarball installs and runs without build lifecycle hooks', { timeou
 		path.join(staging, filename),
 	]);
 
+	const fixturePath = fileURLToPath(new URL('test/fixtures/rgb-444.jpg', root));
 	const smoke = `
 		import encode from '@343dev/guetzli';
 		import { readFile } from 'node:fs/promises';
-		const output = await encode(await readFile(${JSON.stringify(new URL('test/fixtures/rgb-444.jpg', root).pathname)}));
+		const output = await encode(await readFile(${JSON.stringify(fixturePath)}));
 		if (output.length !== 3240) throw new Error('unexpected output');
 	`;
 	await command(process.execPath, ['--input-type=module', '--eval', smoke], { cwd: installation });

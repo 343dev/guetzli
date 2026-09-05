@@ -5,10 +5,11 @@ import { chmod, lstat, mkdtemp, readFile, symlink, writeFile } from 'node:fs/pro
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
+import { fileURLToPath } from 'node:url';
 
-const cliPath = new URL('../cli.js', import.meta.url).pathname;
-const fixturePath = new URL('fixtures/rgb-444.jpg', import.meta.url).pathname;
-const invalidPath = new URL('fixtures/invalid.jpg', import.meta.url).pathname;
+const cliPath = fileURLToPath(new URL('../cli.js', import.meta.url));
+const fixturePath = fileURLToPath(new URL('fixtures/rgb-444.jpg', import.meta.url));
+const invalidPath = fileURLToPath(new URL('fixtures/invalid.jpg', import.meta.url));
 
 async function run(arguments_, options = {}) {
 	return new Promise((resolve, reject) => {
