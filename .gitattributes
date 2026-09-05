@@ -1,0 +1,2 @@
+# Preserve the exact bytes of the vendored upstream snapshot.
+/upstream/guetzli/** -text
