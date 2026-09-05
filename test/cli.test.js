@@ -79,8 +79,10 @@ test('keeps an existing output intact after encoding failure', async () => {
 	assert.equal(result.status, 1);
 	const unchangedOutput = await readFile(outputPath);
 	assert.equal(unchangedOutput.toString(), 'existing');
-	const statistics = await lstat(outputPath);
-	assert.equal(statistics.mode & 0o777, 0o600);
+	if (process.platform !== 'win32') {
+		const statistics = await lstat(outputPath);
+		assert.equal(statistics.mode & 0o777, 0o600);
+	}
 });
 
 test('preserves safe file permissions and rejects symbolic-link output', async () => {
@@ -90,8 +92,10 @@ test('preserves safe file permissions and rejects symbolic-link output', async (
 	await chmod(outputPath, 0o640);
 	const success = await run([fixturePath, outputPath]);
 	assert.equal(success.status, 0);
-	const statistics = await lstat(outputPath);
-	assert.equal(statistics.mode & 0o777, 0o640);
+	if (process.platform !== 'win32') {
+		const statistics = await lstat(outputPath);
+		assert.equal(statistics.mode & 0o777, 0o640);
+	}
 
 	const linkPath = path.join(directory, 'link.jpg');
 	await symlink(outputPath, linkPath);

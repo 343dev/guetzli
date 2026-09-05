@@ -10,6 +10,7 @@ import { fileURLToPath } from 'node:url';
 const execFileAsync = promisify(execFile);
 const root = new URL('../', import.meta.url);
 const rootPath = fileURLToPath(root);
+const npmCliPath = process.env.npm_execpath;
 
 async function command(file, arguments_, options = {}) {
 	return execFileAsync(file, arguments_, {
@@ -24,9 +25,17 @@ async function command(file, arguments_, options = {}) {
 }
 
 test('the npm tarball installs and runs without build lifecycle hooks', { timeout: 120_000 }, async () => {
+	assert.ok(npmCliPath, 'npm_execpath must be set by the npm test command');
 	const staging = await mkdtemp(path.join(tmpdir(), 'guetzli-pack-'));
 	const installation = path.join(staging, 'installation');
-	const { stdout } = await command('npm', ['pack', rootPath, '--json', '--pack-destination', staging]);
+	const { stdout } = await command(process.execPath, [
+		npmCliPath,
+		'pack',
+		rootPath,
+		'--json',
+		'--pack-destination',
+		staging,
+	]);
 	const packed = JSON.parse(stdout);
 	const [{ filename, files }] = Array.isArray(packed)
 		? packed
@@ -57,7 +66,8 @@ test('the npm tarball installs and runs without build lifecycle hooks', { timeou
 	assert.ok(!names.some(name => name.endsWith('.map') || name.endsWith('.debug')));
 
 	await writeFile(path.join(staging, 'package.json'), '{"private":true}');
-	await command('npm', [
+	await command(process.execPath, [
+		npmCliPath,
 		'install',
 		'--ignore-scripts',
 		'--no-audit',
