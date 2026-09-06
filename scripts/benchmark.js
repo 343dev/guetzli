@@ -38,9 +38,9 @@ async function medianOperation(operation) {
 	)[1];
 }
 
-async function nativeEncode(binary, inputPath, outputPath) {
+async function nativeEncode(binary, quality, inputPath, outputPath) {
 	await new Promise((resolve, reject) => {
-		const child = spawn(binary, ['95', inputPath, outputPath], { stdio: 'ignore' });
+		const child = spawn(binary, [String(quality), inputPath, outputPath], { stdio: 'ignore' });
 		child.once('error', reject);
 		child.once('exit', (code) => {
 			if (code === 0) {
@@ -55,10 +55,12 @@ async function nativeEncode(binary, inputPath, outputPath) {
 }
 
 async function measure(inputPath) {
-	const defaultBinary = fileURLToPath(new URL(
-		'../.cache/native-reference/guetzli-native-reference',
-		import.meta.url,
-	));
+	const defaultBinary = process.env.NATIVE_OUTPUT_DIR
+		? path.join(process.env.NATIVE_OUTPUT_DIR, 'guetzli-native-reference')
+		: fileURLToPath(new URL(
+			'../.cache/native-reference/guetzli-native-reference',
+			import.meta.url,
+		));
 	const binary = process.env.GUETZLI_NATIVE_REFERENCE ?? defaultBinary;
 	const directory = await mkdtemp(path.join(tmpdir(), 'guetzli-benchmark-'));
 	const nativeOutput = path.join(directory, 'native.jpg');
@@ -70,7 +72,12 @@ async function measure(inputPath) {
 			return {};
 		});
 		const native = await medianOperation(
-			async () => nativeEncode(binary, inputPath, nativeOutput),
+			async () => nativeEncode(
+				binary,
+				qualities.quality,
+				inputPath,
+				nativeOutput,
+			),
 		);
 		const wasm = await medianOperation(async () => {
 			const output = await encode(input, qualities);

@@ -5,7 +5,7 @@ readonly ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 readonly UPSTREAM="$ROOT/upstream/guetzli"
 readonly OUTPUT_DIR="${WASM_OUTPUT_DIR:-$ROOT/dist}"
 readonly EXPECTED_VERSION='6.0.9'
-readonly SDK_DIR="${EMSDK:-$ROOT/.cache/emsdk}"
+readonly SDK_DIR="${EMSDK_INSTALL_DIR:-$ROOT/.cache/emsdk}"
 readonly EMXX="$SDK_DIR/upstream/emscripten/em++"
 
 if [[ ! -x "$EMXX" ]]; then
@@ -21,6 +21,16 @@ if [[ "$actual_version" != *" $EXPECTED_VERSION "* ]]; then
   exit 1
 fi
 
+for source_dir in \
+  "$UPSTREAM/guetzli" \
+  "$UPSTREAM/third_party/butteraugli"; do
+  if [[ ! -d "$source_dir" ]]; then
+    printf 'Missing source directory %s\n' "$source_dir" >&2
+    exit 1
+  fi
+done
+
+sources=()
 mapfile -d '' sources < <(
   find "$UPSTREAM/guetzli" "$UPSTREAM/third_party/butteraugli" \
     -type f -name '*.cc' \
@@ -28,6 +38,10 @@ mapfile -d '' sources < <(
     ! -name 'butteraugli_main.cc' \
     -print0 | sort -z
 )
+if [[ ${#sources[@]} -eq 0 ]]; then
+  printf 'No Guetzli sources found under %s\n' "$UPSTREAM" >&2
+  exit 1
+fi
 
 mkdir -p "$OUTPUT_DIR"
 
@@ -40,6 +54,7 @@ mkdir -p "$OUTPUT_DIR"
   -Wall \
   -Wextra \
   -Werror \
+  -fexceptions \
   -I"$UPSTREAM" \
   -I"$UPSTREAM/third_party/butteraugli" \
   -c "$ROOT/src/wasm/bridge.cc" \
@@ -54,6 +69,7 @@ for source in "${sources[@]}"; do
     -O3 \
     -DNDEBUG \
     -std=c++11 \
+    -fexceptions \
     -I"$UPSTREAM" \
     -I"$UPSTREAM/third_party/butteraugli" \
     -c "$source" \
@@ -65,6 +81,7 @@ done
   -O3 \
   -DNDEBUG \
   -std=c++11 \
+  -fexceptions \
   "${objects[@]}" \
   -sMODULARIZE=1 \
   -sEXPORT_ES6=1 \

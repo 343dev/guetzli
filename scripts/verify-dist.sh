@@ -22,8 +22,11 @@ fi
 
 (
   cd /tmp
-  node --input-type=module <<EOF
-import createModule from '${ROOT}/dist/guetzli.mjs';
+  GUETZLI_VERIFY_ROOT="$ROOT" node --input-type=module <<'EOF'
+import { pathToFileURL } from 'node:url';
+
+const modulePath = `${process.env.GUETZLI_VERIFY_ROOT}/dist/guetzli.mjs`;
+const createModule = (await import(pathToFileURL(modulePath).href)).default;
 const module = await createModule();
 if (typeof module._guetzli_encode !== 'function') {
   throw new Error('Emscripten loader did not resolve guetzli.wasm through import.meta.url');

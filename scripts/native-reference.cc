@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <cctype>
 #include <fstream>
 #include <iostream>
 #include <iterator>
@@ -30,9 +31,21 @@ int main(int argc, char** argv) {
     return 2;
   }
 
+  const char* quality_text = argv[1];
+  bool digits_only = *quality_text != '\0';
+  for (const char* character = quality_text;
+       digits_only && *character != '\0'; ++character) {
+    digits_only =
+        std::isdigit(static_cast<unsigned char>(*character)) != 0;
+  }
+  if (!digits_only) {
+    std::cerr << "QUALITY must be an integer\n";
+    return 2;
+  }
+
   int quality;
   try {
-    quality = std::stoi(argv[1]);
+    quality = std::stoi(quality_text);
   } catch (const std::exception&) {
     std::cerr << "QUALITY must be an integer\n";
     return 2;
@@ -60,6 +73,7 @@ int main(int argc, char** argv) {
   guetzli::ProcessStats stats;
   std::string output;
   if (!guetzli::Process(params, &stats, input, &output)) {
+    std::cerr << "Guetzli processing failed\n";
     return 1;
   }
 

@@ -7,6 +7,8 @@ import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
+import { guetzliVersion } from '../lib/version.js';
+
 const cliPath = fileURLToPath(new URL('../cli.js', import.meta.url));
 const fixturePath = fileURLToPath(new URL('fixtures/rgb-444.jpg', import.meta.url));
 const invalidPath = fileURLToPath(new URL('fixtures/invalid.jpg', import.meta.url));
@@ -36,9 +38,10 @@ test('prints help and version', async () => {
 	const help = await run(['--help']);
 	assert.equal(help.status, 0);
 	assert.match(help.stdout.toString(), /Usage:\n {2}guetzli/);
+	assert.match(help.stdout.toString(), /--version\s+Print the Guetzli version/);
 	const version = await run(['--version']);
 	assert.equal(version.status, 0);
-	assert.equal(version.stdout.toString(), '2.0.0\n');
+	assert.equal(version.stdout.toString(), `${guetzliVersion}\n`);
 });
 
 test('uses strict option parsing and usage exit code 2', async () => {
@@ -85,7 +88,7 @@ test('keeps an existing output intact after encoding failure', async () => {
 	}
 });
 
-test('preserves safe file permissions and rejects symbolic-link output', async () => {
+test('preserves safe file permissions and rejects invalid output types', async () => {
 	const directory = await mkdtemp(path.join(tmpdir(), 'guetzli-output-'));
 	const outputPath = path.join(directory, 'output.jpg');
 	await writeFile(outputPath, 'existing');
@@ -102,6 +105,10 @@ test('preserves safe file permissions and rejects symbolic-link output', async (
 	const rejected = await run([fixturePath, linkPath]);
 	assert.equal(rejected.status, 3);
 	assert.match(rejected.stderr.toString(), /Symbolic links and special files/);
+
+	const rejectedDirectory = await run([fixturePath, directory]);
+	assert.equal(rejectedDirectory.status, 3);
+	assert.match(rejectedDirectory.stderr.toString(), /Output path is a directory/);
 });
 
 test('writes verbose diagnostics only to standard error', async () => {

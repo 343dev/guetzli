@@ -14,6 +14,16 @@ if [[ "$actual_version" != "$EXPECTED_VERSION" ]]; then
   exit 1
 fi
 
+for source_dir in \
+  "$UPSTREAM/guetzli" \
+  "$UPSTREAM/third_party/butteraugli"; do
+  if [[ ! -d "$source_dir" ]]; then
+    printf 'Missing source directory %s\n' "$source_dir" >&2
+    exit 1
+  fi
+done
+
+sources=()
 mapfile -d '' sources < <(
   find "$UPSTREAM/guetzli" "$UPSTREAM/third_party/butteraugli" \
     -type f -name '*.cc' \
@@ -21,6 +31,10 @@ mapfile -d '' sources < <(
     ! -name 'butteraugli_main.cc' \
     -print0 | sort -z
 )
+if [[ ${#sources[@]} -eq 0 ]]; then
+  printf 'No Guetzli sources found under %s\n' "$UPSTREAM" >&2
+  exit 1
+fi
 
 mkdir -p "$OUTPUT_DIR"
 

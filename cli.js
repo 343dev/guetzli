@@ -5,6 +5,7 @@ import { createReadStream } from 'node:fs';
 import {
 	lstat,
 	open,
+	readFile,
 	rename,
 	stat,
 	unlink,
@@ -12,10 +13,9 @@ import {
 import path from 'node:path';
 import process from 'node:process';
 
-import packageData from './package.json' with { type: 'json' };
 import { encodeWithDiagnostics, maximumInputSize } from './lib/encode.js';
-import { defaults } from './lib/options.js';
-
+import { defaults, ranges } from './lib/options.js';
+import { guetzliVersion } from './lib/version.js';
 const exitCodes = {
 	encoding: 1,
 	usage: 2,
@@ -33,6 +33,7 @@ const optionDefinitions = {
 };
 
 let receivedSignal;
+let parsedOptions;
 let signalCount = 0;
 let signalReject;
 let cancelCurrentOperation = async () => {};
@@ -126,9 +127,8 @@ function parseArguments(arguments_) {
 			throw usageError(`Option --${name} requires a value`);
 		}
 
-		options[name] = name === 'quality'
-			? parseInteger(name, value, 84, 110)
-			: parseInteger(name, value, 100, 3500);
+		const [minimum, maximum] = ranges[name];
+		options[name] = parseInteger(name, value, minimum, maximum);
 	}
 
 	const informationalCount = Number(options.help) + Number(options.version);
@@ -156,11 +156,11 @@ Operands:
   output                JPEG filename, or - for standard output
 
 Options:
-  --quality Q            JPEG quality from 84 to 110 (default: 95)
-  --memlimit M           Memory limit in MiB from 100 to 3500 (default: 3500)
+  --quality Q            JPEG quality from ${ranges.quality[0]} to ${ranges.quality[1]} (default: ${defaults.quality})
+  --memlimit M           Memory limit in MiB from ${ranges.memlimit[0]} to ${ranges.memlimit[1]} (default: ${defaults.memlimit})
   --verbose              Print Guetzli diagnostics to standard error
   --help                 Print this help
-  --version              Print the package version
+  --version              Print the Guetzli version
 `;
 }
 
@@ -194,18 +194,39 @@ async function readBounded(stream) {
 
 async function readInput(inputPath) {
 	try {
-		if (inputPath !== '-') {
-			const inputStatistics = await stat(inputPath);
-			if (inputStatistics.isFile() && inputStatistics.size > maximumInputSize) {
-				throw new CliError(
-					`JPEG input exceeds the ${maximumInputSize}-byte limit`,
-					exitCodes.encoding,
-				);
-			}
+		if (inputPath === '-') {
+			return await readBounded(process.stdin);
 		}
-		return await readBounded(
-			inputPath === '-' ? process.stdin : createReadStream(inputPath),
-		);
+
+		const inputStatistics = await stat(inputPath);
+		if (!inputStatistics.isFile()) {
+			// Device files and other streams have no trustworthy size, so enforce
+			// the limit while reading instead of buffering them without a bound.
+			return await readBounded(createReadStream(inputPath));
+		}
+		if (inputStatistics.size > maximumInputSize) {
+			throw new CliError(
+				`JPEG input exceeds the ${maximumInputSize}-byte limit`,
+				exitCodes.encoding,
+			);
+		}
+
+		const abortController = new AbortController();
+		cancelCurrentOperation = async () => abortController.abort();
+		let input;
+		try {
+			input = await readFile(inputPath, { signal: abortController.signal });
+		} finally {
+			cancelCurrentOperation = async () => {};
+		}
+		throwIfSignalled();
+		if (input.byteLength > maximumInputSize) {
+			throw new CliError(
+				`JPEG input exceeds the ${maximumInputSize}-byte limit`,
+				exitCodes.encoding,
+			);
+		}
+		return input;
 	} catch (error) {
 		if (error instanceof CliError || error instanceof SignalError) {
 			throw error;
@@ -219,7 +240,9 @@ async function outputStatistics(outputPath) {
 		const statistics = await lstat(outputPath);
 		if (!statistics.isFile()) {
 			throw new CliError(
-				'Symbolic links and special files cannot be used as output',
+				statistics.isDirectory()
+					? 'Output path is a directory'
+					: 'Symbolic links and special files cannot be used as output',
 				exitCodes.filesystem,
 			);
 		}
@@ -355,19 +378,20 @@ function handleSignal(signal) {
 
 async function main() {
 	const { options, operands } = parseArguments(process.argv.slice(2));
+	parsedOptions = options;
 	if (options.help) {
-		process.stdout.write(helpText());
+		await writeStandardOutput(helpText());
 		return;
 	}
 	if (options.version) {
-		process.stdout.write(`${packageData.version}\n`);
+		await writeStandardOutput(`${guetzliVersion}\n`);
 		return;
 	}
 
 	const [inputPath, outputPath] = operands;
-	const input = await readInput(inputPath);
-	throwIfSignalled();
 	await preflightOutput(outputPath);
+	throwIfSignalled();
+	const input = await readInput(inputPath);
 	throwIfSignalled();
 
 	if (options.verbose) {
@@ -381,7 +405,7 @@ async function main() {
 		memlimit: options.memlimit,
 	});
 	cancelCurrentOperation = operation.terminate;
-	const signalPromise = new Promise((resolve, reject) => {
+	const signalPromise = new Promise((_, reject) => {
 		signalReject = reject;
 	});
 	let result;
@@ -391,7 +415,9 @@ async function main() {
 		if (error instanceof SignalError) {
 			throw error;
 		}
-		throw new CliError(error.message, encodingExitCode(error), error);
+		const cliError = new CliError(error.message, encodingExitCode(error), error);
+		cliError.detail = error.cause?.message;
+		throw cliError;
 	} finally {
 		signalReject = undefined;
 		cancelCurrentOperation = async () => {};
@@ -417,8 +443,8 @@ try {
 		process.exitCode = exitCodes[receivedSignal ?? error.signal];
 	} else {
 		process.stderr.write(`${error.message}\n`);
-		if (process.argv.includes('--verbose') && error.cause?.cause?.message) {
-			process.stderr.write(`${error.cause.cause.message}\n`);
+		if (parsedOptions?.verbose && error.detail) {
+			process.stderr.write(`${error.detail}\n`);
 		}
 		process.exitCode = error.exitCode ?? exitCodes.runtime;
 	}

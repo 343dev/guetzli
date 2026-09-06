@@ -125,7 +125,7 @@ Guetzli is deliberately CPU- and memory-intensive. Upstream estimates approximat
 
 Guetzli expects high-quality sRGB JPEG input with gamma 2.2. It ignores embedded color-profile metadata and produces sequential JPEG output. A true single-component grayscale JPEG is not supported by upstream Guetzli; three-component YCbCr JPEGs with grayscale-looking pixels are supported.
 
-See [UPSTREAM.md](UPSTREAM.md) for source and toolchain provenance. Rebuild, memory, parity, and benchmark details are maintained in the repository documentation.
+See [UPSTREAM.md](UPSTREAM.md) for source and toolchain provenance. The WebAssembly and native-reference build scripts require Linux, Bash, and their pinned compiler toolchains; package consumers do not need them. Rebuild, memory, parity, and benchmark details are maintained in the repository documentation.
 
 ## Other projects
 

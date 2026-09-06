@@ -16,6 +16,8 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <exception>
+#include <new>
 #include <string>
 
 #include "guetzli/jpeg_data.h"
@@ -54,6 +56,7 @@ enum GuetzliStatus {
   GUETZLI_MEMORY_LIMIT = 2,
   GUETZLI_PROCESSING_FAILED = 3,
   GUETZLI_INVALID_OPTIONS = 4,
+  GUETZLI_OUT_OF_MEMORY = 5,
 };
 
 // Ownership contract:
@@ -67,59 +70,81 @@ int guetzli_encode(const std::uint8_t* input,
                    int quality,
                    int memory_limit_mib,
                    int verbose) {
-  ResetState();
+  try {
+    ResetState();
 
-  if (input == nullptr || input_size == 0) {
-    error_message = "JPEG input is empty";
-    return GUETZLI_INVALID_INPUT;
-  }
-  if (quality < kLowestQuality || quality > kHighestQuality ||
-      memory_limit_mib < kLowestMemoryLimitMiB ||
-      memory_limit_mib > kHighestMemoryLimitMiB ||
-      (verbose != 0 && verbose != 1)) {
-    error_message = "Invalid bridge options";
-    return GUETZLI_INVALID_OPTIONS;
-  }
+    if (input == nullptr || input_size == 0) {
+      error_message = "JPEG input is empty";
+      return GUETZLI_INVALID_INPUT;
+    }
+    if (quality < kLowestQuality || quality > kHighestQuality ||
+        memory_limit_mib < kLowestMemoryLimitMiB ||
+        memory_limit_mib > kHighestMemoryLimitMiB ||
+        (verbose != 0 && verbose != 1)) {
+      error_message = "Invalid bridge options";
+      return GUETZLI_INVALID_OPTIONS;
+    }
 
-  const std::string input_data(reinterpret_cast<const char*>(input), input_size);
-  guetzli::JPEGData jpeg_header;
-  if (!guetzli::ReadJpeg(input_data, guetzli::JPEG_READ_HEADER, &jpeg_header)) {
-    error_message = "Could not read JPEG header";
-    return GUETZLI_INVALID_INPUT;
-  }
+    const std::string input_data(reinterpret_cast<const char*>(input),
+                                 input_size);
+    guetzli::JPEGData jpeg_header;
+    if (!guetzli::ReadJpeg(input_data, guetzli::JPEG_READ_HEADER,
+                           &jpeg_header)) {
+      error_message = "Could not read JPEG header";
+      return GUETZLI_INVALID_INPUT;
+    }
 
-  const double pixels =
-      static_cast<double>(jpeg_header.width) * jpeg_header.height;
-  const double upstream_estimate_mib =
-      pixels * kUpstreamBytesPerPixel / kBytesPerMiB;
-  if (memory_limit_mib < kLowestMemoryLimitMiB ||
-      upstream_estimate_mib > memory_limit_mib) {
-    error_message = "Guetzli memory limit would be exceeded";
-    return GUETZLI_MEMORY_LIMIT;
-  }
+    const double pixels =
+        static_cast<double>(jpeg_header.width) * jpeg_header.height;
+    const double upstream_estimate_mib =
+        pixels * kUpstreamBytesPerPixel / kBytesPerMiB;
+    if (upstream_estimate_mib > memory_limit_mib) {
+      error_message = "Guetzli memory limit would be exceeded";
+      return GUETZLI_MEMORY_LIMIT;
+    }
 
-  const double wasm_safety_estimate_mib =
-      pixels * kWasmSafetyBytesPerPixel / kBytesPerMiB;
-  if (wasm_safety_estimate_mib > kHighestMemoryLimitMiB) {
-    error_message = "WebAssembly memory limit would be exceeded";
-    return GUETZLI_MEMORY_LIMIT;
-  }
+    const double wasm_safety_estimate_mib =
+        pixels * kWasmSafetyBytesPerPixel / kBytesPerMiB;
+    if (wasm_safety_estimate_mib > kHighestMemoryLimitMiB) {
+      error_message = "WebAssembly memory limit would be exceeded";
+      return GUETZLI_MEMORY_LIMIT;
+    }
 
-  guetzli::Params parameters;
-  parameters.butteraugli_target = static_cast<float>(
-      guetzli::ButteraugliScoreForQuality(quality));
+    guetzli::Params parameters;
+    parameters.butteraugli_target = static_cast<float>(
+        guetzli::ButteraugliScoreForQuality(quality));
 
-  guetzli::ProcessStats statistics;
-  if (verbose != 0) {
-    statistics.debug_output = &debug_output;
-  }
+    guetzli::ProcessStats statistics;
+    if (verbose != 0) {
+      statistics.debug_output = &debug_output;
+    }
 
-  if (!guetzli::Process(parameters, &statistics, input_data, &output)) {
-    error_message = "Guetzli could not process the JPEG input";
+    if (!guetzli::Process(parameters, &statistics, input_data, &output)) {
+      error_message = "Guetzli could not process the JPEG input";
+      return GUETZLI_PROCESSING_FAILED;
+    }
+
+    return GUETZLI_OK;
+  } catch (const std::bad_alloc&) {
+    ResetState();
+    return GUETZLI_OUT_OF_MEMORY;
+  } catch (const std::exception& exception) {
+    ResetState();
+    try {
+      error_message = exception.what();
+    } catch (const std::bad_alloc&) {
+      return GUETZLI_OUT_OF_MEMORY;
+    }
+    return GUETZLI_PROCESSING_FAILED;
+  } catch (...) {
+    ResetState();
+    try {
+      error_message = "Guetzli processing threw an unknown exception";
+    } catch (...) {
+      return GUETZLI_OUT_OF_MEMORY;
+    }
     return GUETZLI_PROCESSING_FAILED;
   }
-
-  return GUETZLI_OK;
 }
 
 const std::uint8_t* guetzli_output_data() {
