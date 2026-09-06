@@ -58,12 +58,12 @@
 		"enable-git-hooks": "git config core.hooksPath .githooks"
 	},
 	"devDependencies": {
-		"@343dev/eslint-config": "4.0.0",
-		"@types/node": "^22.20.1",
-		"eslint": "9.39.2",
-		"jpeg-js": "^0.4.4",
-		"lint-staged": "16.2.7",
-		"typescript": "^5.9.3"
+		"@343dev/eslint-config": "5.0.0",
+		"@types/node": "22.20.1",
+		"eslint": "10.9.1",
+		"jpeg-js": "0.4.4",
+		"lint-staged": "17.4.1",
+		"typescript": "7.0.2"
 	},
 	"lint-staged": {
 		"*.js": [
