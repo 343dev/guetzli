@@ -4,6 +4,7 @@
 
 - Use `npm`; keep `package-lock.json` in sync with `package.json`.
 - Install dependencies with `npm ci --ignore-scripts`. This package must never require install-time compilation or downloads.
+- After cloning, run `npm run enable-git-hooks` once to use the versioned hooks in `.githooks/`.
 - Before completing a change, run:
   - `npm run lint`
   - `npm run test:types`
@@ -40,12 +41,6 @@
 - Treat `test/fixtures/floating-point-boundary-444.jpg` as immutable. Its quality-95 result is the only accepted equivalent-parity exception.
 - Any new native/WebAssembly byte mismatch is a release blocker. Investigate and document it; never loosen parity using a generic perceptual threshold.
 - Keep large images out of the ordinary test suite. Generate them locally with `scripts/generate-benchmark-fixtures.py` for manual performance and stress checks.
-
-## Project records
-
-- Before changing terminology or architecture, read `CONTEXT.md` and the relevant files under `docs/adr/`. Use the glossary terms and surface any ADR conflict explicitly.
-- Issues are local Markdown files under `.scratch/`; follow `docs/agents/issue-tracker.md`.
-- This repository uses the single-context domain-doc layout described in `docs/agents/domain.md`.
 
 ## Boundaries
 

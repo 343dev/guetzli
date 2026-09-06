@@ -127,6 +127,16 @@ Guetzli expects high-quality sRGB JPEG input with gamma 2.2. It ignores embedded
 
 See [UPSTREAM.md](UPSTREAM.md) for source and toolchain provenance. The WebAssembly and native-reference build scripts require Linux, Bash, and their pinned compiler toolchains; package consumers do not need them. Rebuild, memory, parity, and benchmark details are maintained in the repository documentation.
 
+## Development
+
+After cloning the repository, enable Git hooks once:
+
+```sh
+npm run enable-git-hooks
+```
+
+This configures Git to use the versioned hooks from the [.githooks](./.githooks) directory.
+
 ## Other projects
 
 - [optimizt](https://github.com/343dev/optimizt) — image optimization CLI
