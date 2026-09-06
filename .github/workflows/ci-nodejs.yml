@@ -5,31 +5,94 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   tests:
+    name: Node.js ${{ matrix.node-version }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    permissions:
-      contents: read
+    timeout-minutes: 30
     strategy:
+      fail-fast: false
       matrix:
-        node-version: [latest]
-        os: [
-            ubuntu-latest, # x64
-            ubuntu-24.04-arm, # arm64
-            macos-15-intel, # x64
-            macos-15, # arm64
-            windows-latest, # x64
-            windows-11-arm, # arm64
-          ]
+        node-version: [22.22.1, 24]
+        os:
+          - ubuntu-latest
+          - macos-15-intel
+          - macos-15
+          - windows-latest
+        include:
+          - node-version: 24
+            os: ubuntu-24.04-arm
+          - node-version: 24
+            os: windows-11-arm
     steps:
       - name: Checkout repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           persist-credentials: false
-      - name: Node.js ${{ matrix.node-version }} on ${{ matrix.os }}
+      - name: Set up Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: ${{ matrix.node-version }}
+          cache: npm
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
+      - name: Lint
+        run: npm run lint
+      - name: Check declarations
+        run: npm run test:types
+      - name: Test API, CLI, parity, and package
+        run: npm test
+
+  reproducibility:
+    name: Linux build and reproducibility
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22.22.1
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+      - name: Verify upstream snapshot
+        run: npm run verify:upstream
+      - name: Install pinned Emscripten SDK
+        run: npm run setup-emsdk
+      - name: Verify committed distribution
+        run: npm run verify:dist
+      - name: Build native reference
+        run: |
+          docker run --rm --platform linux/amd64 \
+            --volume "$PWD:/workspace" \
+            --workdir /workspace \
+            gcc:14.2.0 \
+            ./scripts/build-native.sh
+      - name: Verify native parity baselines
+        env:
+          GUETZLI_NATIVE_REFERENCE: ${{ github.workspace }}/.cache/native-reference/guetzli-native-reference
+        run: node ./scripts/verify-native-parity.js
+      - name: Pack release artifact
+        run: |
+          mkdir -p "$RUNNER_TEMP/package"
+          npm pack --pack-destination "$RUNNER_TEMP/package"
+      - name: Upload release artifact
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4
+        with:
+          name: guetzli-package
+          path: ${{ runner.temp }}/package/*.tgz
+          if-no-files-found: error
+          retention-days: 14
